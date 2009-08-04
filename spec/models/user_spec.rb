@@ -2,7 +2,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe User do
   before(:each) do
-    User.all.each {|doc| doc.destroy }
+    User.delete_all
      
     @valid_attributes = {
       :username => 'rughetto',
@@ -40,12 +40,11 @@ describe User do
         :password => 'secret', :password_confirmation => 'secret',
         :emails => ['kane@trajectorset.com']
       )
+      user_2.should_not be_valid
       # couchrest is not working as anticipated because the error 
       # is being attached to the method name, not the username field. 
-      # I am going to let this fail until they get back to me and say
-      # they aren't changing it.
-      user_2.should_not be_valid
-      user_2.errors.on(:username).should_not be_nil
+      # So this is commented out until there is some resolution
+      # user_2.errors.on(:username).should_not be_nil
     end 
     
     it 'username should be valid on resave' do 
@@ -61,39 +60,211 @@ describe User do
       user.errors.on(:emails).should_not be_nil
     end
     
-    it 'should be valid when the password_confirmation preceeds the password' do 
-      user = User.new( {
-        :password_confirmation => 'secret',
-        :username => 'rughetto',
-        :password => 'secret',
-        :emails => ['ru_ghetto@rubyghetto.com', 'baccigalupi@gmail.com']
-      })
-      user.should be_valid
-    end    
-  end      
+    describe 'authentication' do 
+      
+      it 'authable?/authenticatable? must be true' do 
+        user = User.new( @valid_attributes.dup )
+        user.should be_authable 
+        user.should be_valid 
+        
+        @valid_attributes.delete(:password)
+        @valid_attributes.delete( :password_confirmation )
+        user_2 = User.new( @valid_attributes )
+        user_2.should_not be_authable
+        user_2.should_not be_valid
+      end  
+      
+      describe 'password' do
+        it 'password should not be required' do
+          @valid_attributes.delete( :password )
+          @valid_attributes.delete( :password_confirmation )
+          user = User.new( @valid_attributes )
+          user.auth[:new_method] = true
+          user.should be_authable
+          user.should be_valid
+        end  
+    
+        it 'should require a password confirmation when setting password' do
+          @valid_attributes.delete( :password_confirmation )
+          user = User.new( @valid_attributes ) 
+          user.should_not be_valid
+        end  
+      
+        it 'should be valid when the password_confirmation preceeds the password' do 
+          user = User.new( {
+            :password_confirmation => 'secret',
+            :username => 'rughetto',
+            :password => 'secret',
+            :emails => ['ru_ghetto@rubyghetto.com', 'baccigalupi@gmail.com']
+          })
+          user.should be_valid
+        end    
+      
+        it 'password should match confirmation when using password' do 
+          user = User.new( {
+            :password_confirmation => 'not_secret',
+            :username => 'rughetto',
+            :password => 'secret',
+            :emails => ['ru_ghetto@rubyghetto.com', 'baccigalupi@gmail.com']
+          })
+          user.should_not be_valid 
+        end  
+      end  
+    end
+  end
+  
+  describe 'authentication' do
+    it 'should have an auth attribute' do
+      user = User.new
+      user.keys.should include('auth')
+    end  
+    
+    describe 'password' do
+      describe 'on record create' do
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end   
+        
+        it 'should add a "password" hash to the auth attribute' do 
+          @user.auth['password'].should_not be_nil
+        end
+          
+        it 'should add "salt" and "encrypted_password" key/values to the authentication["password"] hash' do 
+          @user.auth['password']['salt'].should_not be_nil
+          @user.auth['password']['encrypted_password']
+        end
+      end
+      
+      describe 'on change' do 
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end   
+        
+        it 'should not save a new encrpted_password if the password is not valid' do 
+          pass = @user.auth['password']['encrypted_password'].dup
+          @user.password_confirmation = 'something'
+          @user.password = 'else'
+          @user.auth['password']['encrypted_password'].should == pass
+        end
+          
+        it 'should change the encrypted_password if all is good' do
+          pass = @user.auth['password']['encrypted_password'].dup
+          @user.password = 'something'
+          @user.password_confirmation = 'something'
+          @user.auth['password']['encrypted_password'].should_not == pass    
+        end  
+      end
+      
+      describe 'instance method #authenticate_by_password' do 
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end
+          
+        it 'should #authenticate_by_password, returning a user' do 
+          @user.authenticate_by_password('secret').should == @user
+        end 
+         
+        it 'should return false when #authenticate_by_password gets a bad password' do
+          @user.authenticate_by_password('not_secret').should == false
+        end  
+      end  
+        
+      describe "class method #authenticate_by_email" do
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end  
+        
+        it 'should return a user when given a valid email and password' do 
+          User.authenticate_by_email('ru_ghetto@rubyghetto.com', 'secret').should == @user
+          User.authenticate_by_email('baccigalupi@gmail.com', 'secret').should == @user
+        end
+          
+        it 'should return nil when user is not found' do
+          User.authenticate_by_email('kane@trajectorset.com', 'secret').should == nil
+        end
+         
+        it 'should return false when user is found but password is bad' do 
+          User.authenticate_by_email('baccigalupi@gmail.com', 'not secret!').should == false
+        end  
+      end  
+      
+      describe "class method #authenticate_by_username" do
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end  
+        
+        it 'should return a user when given a valid username and password' do 
+          User.authenticate_by_username( 'rughetto', 'secret' ).should == @user
+        end 
+        
+        it 'should return nil when user is not found' do 
+          User.authenticate_by_username('kane', 'baccigalupi').should == nil
+        end 
+         
+        it 'should return false when user is found but password is bad' do 
+          User.authenticate_by_username('rughetto', 'not secret!').should == false
+        end  
+      end
+      
+      describe "class method #authenticate_by_password" do
+        before(:each) do
+          @user = User.create!( @valid_attributes )
+        end  
+        
+        it 'should try to authenticate via username' do
+          User.authenticate_by_password( 'rughetto', 'secret' ).should == @user
+        end
+          
+        it 'should try to authenticate via email' do
+          User.authenticate_by_password( 'ru_ghetto@rubyghetto.com', 'secret' ).should == @user 
+          User.authenticate_by_password( 'baccigalupi@gmail.com', 'secret' ).should == @user
+        end
+          
+        it 'should return nil if user is not found' do
+          User.authenticate_by_password('kane@trajectorset.com', 'secret').should == nil
+          User.authenticate_by_password('kane', 'secret').should == nil
+        end  
+        
+        it 'should return false if user is found but password is bad' do
+          User.authenticate_by_password('ru_ghetto@rubyghetto.com', 'not secret!').should == false
+          User.authenticate_by_password('baccigalupi@gmail.com', 'not secret!').should == false
+          User.authenticate_by_password('rughetto', 'not secret!').should == false
+        end  
+      end     
+    end  
+  end        
 
   describe 'faux activerecord munges' do 
-    # this stuff has been added to couchrest, 
-    # so it is here just to ensure forward compatibility
-    # rspec, uses Klass.create! when building an model spec
+    describe 'create!' do
+      # these methods has been added to couchrest, 
+      # so it is here just to ensure forward compatibility
+      # rspec, especially since uses Klass.create! when building an model spec
     
-    it 'should create!' do
-      lambda {
-        User.create!( @valid_attributes )
-      }.should_not raise_error
-    end
+      it 'should create!' do
+        lambda {
+          User.create!( @valid_attributes )
+        }.should_not raise_error
+      end
     
-    it 'create! should save and return the record on success' do
-      u = User.create!( @valid_attributes )
-      u.should_not be_nil
-      u.should_not be_new_record
-      u.username.should == 'rughetto'
-    end
+      it 'create! should save and return the record on success' do
+        u = User.create!( @valid_attributes )
+        u.should_not be_nil
+        u.should_not be_new_record
+        u.username.should == 'rughetto'
+      end
       
-    it 'create! should throw an error on failure to save' do
-      @valid_attributes.delete(:username) 
-      lambda { User.create!( @valid_attributes ) }.should raise_error
-    end   
+      it 'create! should throw an error on failure to save' do
+        @valid_attributes.delete(:username) 
+        lambda { User.create!( @valid_attributes ) }.should raise_error
+      end 
+    end
+    
+    describe 'equality ==' do
+      it 'a saved document should be == to the document subsequently pulled (unchanged) from the database' do
+        user = User.create!( @valid_attributes )
+        user.should == User.get( user.id )
+      end  
+    end  
   end 
   
   describe 'changed?' do
