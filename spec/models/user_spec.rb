@@ -15,8 +15,7 @@ describe User do
   describe 'validation' do
     it 'should be valid with valid params' do 
       user = User.new(@valid_attributes)
-      user.valid?
-      user.should be_valid
+      user.valid?.should == true
     end  
     
     it 'must have a username' do 
@@ -36,14 +35,24 @@ describe User do
     end
     
     it 'username should be unique' do
-      user = User.create!( @valid_attributes )
+      user = User.create!( @valid_attributes.dup )
       user_2 = User.new( :username => @valid_attributes[:username], 
         :password => 'secret', :password_confirmation => 'secret',
         :emails => ['kane@trajectorset.com']
       )
+      # couchrest is not working as anticipated because the error 
+      # is being attached to the method name, not the username field. 
+      # I am going to let this fail until they get back to me and say
+      # they aren't changing it.
       user_2.should_not be_valid
       user_2.errors.on(:username).should_not be_nil
-    end  
+    end 
+    
+    it 'username should be valid on resave' do 
+      user = User.create!( @valid_attributes ) 
+      user.email = 'kane@trajectorset.com'
+      lambda{ user.save! }.should_not raise_error
+    end   
       
     it 'must have at least one email' do
       params = @valid_attributes.reject{|key, value| key == :emails}
@@ -92,7 +101,7 @@ describe User do
       @user.should be_changed
     end
       
-    it 'should return false when record is saved and no attributes have ben altered' do
+    it 'should return false when record is saved and no attributes have been altered' do
       @user.save
       @user.should_not be_changed
     end

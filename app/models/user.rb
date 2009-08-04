@@ -1,15 +1,14 @@
-class User < CouchExpress::Model
-  use_database CouchRest.database!("http://localhost:5984/couch_auth_user_#{RAILS_ENV}")
+require COUCH_EXPRESS + '/couch_express/auth/model/password'
 
-  #include CouchRest::CastedModel # this will invalidate getter and setter methods  
+class User < CouchExpress::ValidatedModel
+  include CouchExpress::AuthModel::Password
   
-  # Schema -------------------------------
-  auto_validate!
+  use_database CouchRest.database!("http://localhost:5984/couch_auth_user_#{RAILS_ENV}")
+  
+  # Local Schema -------------------------------
   property  :username 
   property  :full_name, :default => {}
   property  :emails, :defalut => []
-  property  :crypted_password
-  property  :salt
   timestamps!   
   
   # Validations --------------------------
@@ -18,21 +17,19 @@ class User < CouchExpress::Model
     :with => /\A[0-9a-z\-]{3,30}\z/, # Alphanumeric plus hyphen, length 3 to 30 
     :message => 'username must be alpha-numeric (hyphen allowed too), ranging from 3 to 30 characters'
         
-  validates_with_method :validate_username_unique
+  validates_with_method :username, :validate_username_unique
   validates_length :emails, :min => 1 
-  # validates_is_confirmed   :password,   :if => proc {|r| r.password_required? }
-  # validates_present        :term_agreement, :message => ": You must agree to the Terms of Use.",   :if => proc {|r| r.new_record? }
 
   def validate_username_unique
-    if self.class.by_username( :key => self.username, :limit => 1).blank?
+    if new_record? || changed?(:username) 
+      if self.class.by_username( :key => self.username, :limit => 1).blank?
+        return true
+      else 
+        return [false, "Username has already been taken"] 
+      end 
+    else
       return true
-    else 
-      return [false, "Username has already been taken"] 
-    end
-  end
-  
-  def password_required?
-    new_record? || self[:password] 
+    end    
   end
   
   def valid_email_format?(e, validate_with_check = true)
@@ -58,6 +55,7 @@ class User < CouchExpress::Model
   end
   
   # Views --------------------------------
+  view_by :updated_at
   view_by :username
   view_by :email,
     :map => 
@@ -136,7 +134,5 @@ class User < CouchExpress::Model
     self.full_name ||= {}
     self.full_name[:last] = n
   end    
-  
-
     
 end

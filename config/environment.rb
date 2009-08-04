@@ -22,5 +22,7 @@ Rails::Initializer.run do |config|
   config.frameworks -= [ :active_record, :active_resource ]
 
   config.time_zone = 'UTC'
-
+  
+  config.gem "hassox-warden", :lib => 'warden' 
+  config.gem 'hassox-rails_warden', :lib =>"rails_warden"
 end
