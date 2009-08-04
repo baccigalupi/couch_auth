@@ -3,7 +3,7 @@ require COUCH_EXPRESS + '/couch_express/auth/model/password'
 class User < CouchExpress::ValidatedModel
   include CouchExpress::AuthModel::Password
   
-  use_database CouchRest.database!("http://localhost:5984/couch_auth_user_#{RAILS_ENV}")
+  use_database CouchRest.database!("http://localhost:5984/couch_auth_users_#{RAILS_ENV}")
   
   # Local Schema -------------------------------
   property  :username 
