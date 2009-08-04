@@ -59,7 +59,17 @@ describe User do
       user = User.new( params )
       user.should_not be_valid
       user.errors.on(:emails).should_not be_nil
-    end  
+    end
+    
+    it 'should be valid when the password_confirmation preceeds the password' do 
+      user = User.new( {
+        :password_confirmation => 'secret',
+        :username => 'rughetto',
+        :password => 'secret',
+        :emails => ['ru_ghetto@rubyghetto.com', 'baccigalupi@gmail.com']
+      })
+      user.should be_valid
+    end    
   end      
 
   describe 'faux activerecord munges' do 
