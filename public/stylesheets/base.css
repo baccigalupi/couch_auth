@@ -1,0 +1,23 @@
+/* Other Defaults ----------------------------------- */
+* { font-family: 'Lucida Grande', 'Trebuchet MS', Trebuchet, Helvetica, Verdana, sans-serif; }
+body { line-height: 1.4; font-size: 13px; background-color: #ddd;  }
+body * {color: #222; } 
+h1, h2, h3, h4 { padding-top: 4px;}
+h1 {font-size: 26px;} 
+h2 {font-size: 19px;} 
+h3 {font-size: 16px;} 
+h4, p {font-size: 13px; }
+h5 { font-size: 12px;}
+h6 { font-size: 11px; font-weight: normal;}
+p { margin-bottom: 1.2em;}
+label { cursor: pointer; }
+big { font-size: 1.2em; }
+small { font-size:0.8em; }
+hr { color: #666; background-color: #CCC; height: 1px; width: 100%; border: 1px; margin: 20px 0px 10px;}
+.unbold { font-weight: normal;}
+.clearfix { zoom: 1; } 
+.clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden;}
+.hidden {display: none;} 
+.left {float:left;}
+.right { float:right;} 
+td, th{ padding: 5px 10px; text-align: left ;}

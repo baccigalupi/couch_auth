@@ -1,0 +1,9 @@
+<h1><%= @user.username %></h1>
+
+<h4>Emails:</h4>
+<p><%= @user.emails.join(', ') %></p>
+
+<h4>Authentication Methods:</h4>
+<p><%= @user.auth.keys.join(', ') %></p> 
+
+<%= link_to 'edit', edit_user_path( @user.id ) %>

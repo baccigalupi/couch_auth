@@ -1,0 +1,51 @@
+/* RAILS STUFF */
+.errorExplanation { border: 1px solid #684727; padding: 15px; margin-top: 10px; margin-bottom: 20px; 
+  background-color: #d9bc9e; color: #684727;
+}
+.errorExplanation * { color: #684727; }
+
+/* Page Boy styles 
+ -------------------
+  Styles are namespaced with id name same as class name on major divs to avoid collision
+  with CMS content ... wherever possible 
+*/  
+#body.body { width: 100%; background: transparent url(/images/back.png) repeat; }
+  #body.body #header.header { 
+    height: 130px; background: transparent url(/images/header_gradient.png) repeat-x; 
+    padding: 10px 30px; 
+  } 
+    #body.body #header.header img.text_logo { margin-top: 15px; margin-left: 30px;}
+  #body.body #footer.footer {
+    height: 180px; background: #865e36 url(/images/footer_gradient.png) repeat-x; 
+    color: #d9bc9e; padding: 25px; 
+  } 
+    #body.body #footer.footer * { color: #d9bc9e; }
+    #body.body #footer.footer ul { float: left; margin-right: 45px;}
+      #body.body #footer.footer ul li { margin-left: 5px;}
+  #body.body #content.content { padding: 0px 30px 30px;  }
+    #body.body #content.content #main.main {width: 55%; margin-right: 30px;}
+    #body.body #content.content .box { 
+      border: 1px solid #bababa; padding: 15px; margin-top: 10px; 
+      background: #e4e4e4 url(/images/box_back_grad.png) bottom repeat-x;
+    }  
+      #body.body #content.content .box_shadow { 
+        background: transparent url(/images/shadow_bottom.png) repeat-x; height: 8px;
+        width: 100%;
+      }
+        #body.body #content.content .box_shadow .shadow.left { 
+          background: transparent url(/images/shadow_bottom_left.png) no-repeat; width: 6px;
+        }
+        #body.body #content.content .box_shadow .shadow.right { 
+          background: transparent url(/images/shadow_bottom_right.png) no-repeat; width: 6px;
+        }
+    #body.body #content.content #sidebar.sidebar { 
+      float:left; border-left: 1px solid #bababa; padding: 15px; width: 30%; 
+    }
+    
+
+label { display: block; width: 120px; margin-right: 10px; float: left; text-align: right; font-size: 11px; padding-top: 6px; }
+input[type=submit] { 
+  border: 1px solid #666; background: #eee url(/images/button_back.png) repeat-x;
+  padding: 4px 10px; font-size: 16px; font-weight: bold; margin-top: 10px; margin-bottom: 15px; cursor:pointer; 
+}
+.input { height: 25px; }    

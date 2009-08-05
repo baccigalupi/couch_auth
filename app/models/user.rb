@@ -15,10 +15,10 @@ class User < CouchExpress::ValidatedModel
   validates_present  :username 
   validates_format   :username, 
     :with => /\A[0-9a-z\-]{3,30}\z/, # Alphanumeric plus hyphen, length 3 to 30 
-    :message => 'username must be alpha-numeric (hyphen allowed too), ranging from 3 to 30 characters'
+    :message => 'Username must be alpha-numeric (hyphen allowed too), ranging from 3 to 30 characters'
         
   validates_with_method :username, :validate_username_unique
-  validates_length :emails, :min => 1 
+  validates_length :emails, :min => 1, :message => 'At least one valid email is required' 
 
   def validate_username_unique
     if new_record? || changed?(:username) 
@@ -69,7 +69,7 @@ class User < CouchExpress::ValidatedModel
 
   # Accessors ----------------------------
   def email
-    emails.first
+    emails.empty? ? express_params[:email] : emails.first
   end
 
   def email=( e )

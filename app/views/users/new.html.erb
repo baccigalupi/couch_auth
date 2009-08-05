@@ -1,0 +1,28 @@
+
+<%= error_messages_for 'user' -%>
+
+<% form_for :user, @user, :url => { :action => "create" }, :html => {:class => "box" } do |form| -%>
+<h1>Register</h1>
+
+  <div class="input">
+    <%= form.label      :username, 'Username' %>
+    <%= form.text_field :username  %>
+  </div>  
+  
+  <div class="input">
+    <%= form.label      :email, 'Email' %>
+    <%= form.text_field :email  %> 
+  </div>
+   
+  <div class="input">
+    <%= form.label          :password, 'Password' %>
+    <%= form.password_field :password  %>   
+  </div>  
+  
+  <div class="input">
+    <%= form.label          :password_confirmation, 'Confirm Password' %>
+    <%= form.password_field :password_confirmation  %> 
+  </div>
+  
+  <%= form.submit "Register" %>
+<% end -%>

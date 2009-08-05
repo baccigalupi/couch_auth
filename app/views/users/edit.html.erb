@@ -1,0 +1,28 @@
+<%= error_messages_for 'user' -%>
+
+<% form_for :user, @user, :url => { :action => "update" }, :html => {:class => "box clearfix" } do |form| -%>
+<h1>Edit Details</h1>
+
+  <div class="input">
+    <%= form.label      :username, 'Username' %>
+    <%= form.text_field :username  %>
+  </div>  
+  
+  <div class="input">
+    <%= form.label      :email, 'Email' %>
+    <%= form.text_field :email  %> 
+  </div>
+   
+  <h4>Change Password:</h4>
+  <div class="input">
+    <%= form.label          :password, 'Password' %>
+    <%= form.password_field :password  %>   
+  </div>  
+  
+  <div class="input">
+    <%= form.label          :password_confirmation, 'Confirm Password' %>
+    <%= form.password_field :password_confirmation  %> 
+  </div>
+  
+  <%= form.submit "Save" %>
+<% end -%>  
