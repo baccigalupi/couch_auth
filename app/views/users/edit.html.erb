@@ -1,6 +1,9 @@
 <%= error_messages_for 'user' -%>
 
-<% form_for :user, @user, :url => { :action => "update" }, :html => {:class => "box clearfix", :method => 'put' } do |form| -%>
+<% form_for :user,  @user, 
+    :url => { :action => "update" }, 
+    :html => {:class => "box clearfix", :method => 'put' } do |form| -%>
+
 <h1>Edit Details</h1>
 
   <div class="input">
