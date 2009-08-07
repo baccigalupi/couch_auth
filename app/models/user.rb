@@ -69,7 +69,7 @@ class User < CouchExpress::ValidatedModel
 
   # Accessors ----------------------------
   def email
-    emails.empty? ? express_params[:email] : emails.first
+    !emails || emails.empty? ? express_params[:email] : emails.first
   end
 
   def email=( e )
