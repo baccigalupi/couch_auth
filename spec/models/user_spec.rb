@@ -62,6 +62,7 @@ describe User do
     
     describe 'authentication' do 
       
+      # this should move to auth model spec in plugin
       it 'authable?/authenticatable? must be true' do 
         user = User.new( @valid_attributes.dup )
         user.should be_authable 
@@ -233,84 +234,6 @@ describe User do
       end     
     end  
   end        
-
-  describe 'faux activerecord munges' do 
-    describe 'create!' do
-      # these methods has been added to couchrest, 
-      # so it is here just to ensure forward compatibility
-      # rspec, especially since uses Klass.create! when building an model spec
-    
-      it 'should create!' do
-        lambda {
-          User.create!( @valid_attributes )
-        }.should_not raise_error
-      end
-    
-      it 'create! should save and return the record on success' do
-        u = User.create!( @valid_attributes )
-        u.should_not be_nil
-        u.should_not be_new_record
-        u.username.should == 'rughetto'
-      end
-      
-      it 'create! should throw an error on failure to save' do
-        @valid_attributes.delete(:username) 
-        lambda { User.create!( @valid_attributes ) }.should raise_error
-      end 
-    end
-    
-    describe 'equality ==' do
-      it 'a saved document should be == to the document subsequently pulled (unchanged) from the database' do
-        user = User.create!( @valid_attributes )
-        user.should == User.get( user.id )
-      end  
-    end  
-  end 
-  
-  describe 'changed?' do
-    before(:each) do
-      @user = User.new( @valid_attributes )
-    end  
-    
-    it 'should return true when new record' do
-      @user.should be_changed
-    end  
-    
-    it 'should return true when record is saved and then an attribute has changed' do
-      @user.save
-      @user.username = 'gus'
-      @user.should be_changed
-    end
-      
-    it 'should return false when record is saved and no attributes have been altered' do
-      @user.save
-      @user.should_not be_changed
-    end
-      
-    it 'should take a valid attribute key as an argument and return true if that attribute has changed' do
-      @user.save
-      @user.username = 'gus'
-      @user.changed?(:username).should be_true
-    end
-      
-    it 'should take a valid attribute key as an argument and return false in that attribute is the same' do
-      @user.save
-      @user.changed?(:username).should be_false
-    end  
-    
-    it 'should take an invalid attribute key and return false' do
-      @user.save
-      @user.changed?(:garbage).should be_false
-    end
-      
-    it 'should not persist an attribute for the method and value of "prev"' do
-      @user.save
-      @user.username = 'gus'
-      @user.changed?
-      @user.save
-      @user[:prev].should == nil
-    end  
-  end 
   
   describe 'getters and setters' do 
     describe 'names' do
