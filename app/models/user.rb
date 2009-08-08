@@ -1,7 +1,9 @@
 require COUCH_EXPRESS + '/couch_express/auth/model/password'
+require COUCH_EXPRESS + '/couch_express/auth/model/remember_me'
 
 class User < CouchExpress::ValidatedModel
   include CouchExpress::AuthModel::Password
+  include CouchExpress::AuthModel::RememberMe
   
   use_database CouchRest.database!("http://localhost:5984/couch_auth_users_#{RAILS_ENV}")
   
@@ -133,6 +135,6 @@ class User < CouchExpress::ValidatedModel
   def last_name=( n )
     self.full_name ||= {}
     self.full_name[:last] = n
-  end    
+  end
     
 end

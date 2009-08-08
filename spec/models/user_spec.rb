@@ -414,4 +414,116 @@ describe User do
     end      
   end       
   
+  describe 'remembering users' do
+    before(:each) do 
+      @user = User.new( @valid_attributes )
+    end
+      
+    describe 'remember_me' do
+      it 'should set the auth["remember_me"] hash' do
+        @user.remember_me
+        @user.auth['remember_me'].should_not be_nil
+        @user.auth.class.should == Hash
+      end
+        
+      it 'should set the auth["remember_me"]["token"]' do
+        @user.remember_me
+        @user.auth['remember_me']['token'].should_not be_nil
+        @user.auth['remember_me']['token'].should_not be_empty
+      end
+        
+      it 'should set the auth["remember_me"]["expires_at"]' do 
+        @user.remember_me
+        @user.auth['remember_me']['expires_at'].should_not be_nil
+      end
+      
+      it 'should save the document through when the ! version is called' do
+        @user.remember_me!
+        user = User.first
+        user.auth['remember_me'].should_not be_nil
+        user.auth['remember_me']['token'].should_not be_nil
+        user.auth['remember_me']['expires_at'].should_not be_nil
+      end  
+      
+      it 'should cast the expires_at portion to and from a Time' do
+        @user.remember_me!
+        user = User.first
+        user.remember_expires_at.should_not be_nil
+        user.remember_expires_at.class.should == Time
+      end
+    end
+    
+    describe 'forget_me' do
+      it 'should clear the auth["remember_me"] hash and related' do
+        @user.remember_me
+        @user.auth['remember_me'].should_not be_nil
+        @user.auth['remember_me']['token'].should_not be_nil
+        @user.auth['remember_me']['expires_at'].should_not be_nil 
+        @user.forget_me
+        @user.auth['remember_me'].should be_nil
+      end  
+    
+      it 'should save the document when the ! version is called' do
+        @user.remember_me
+        @user.auth['remember_me'].should_not be_nil
+        @user.auth['remember_me']['token'].should_not be_nil
+        @user.auth['remember_me']['expires_at'].should_not be_nil
+        @user.forget_me!
+        user = User.first
+        user.auth['remember_me'].should be_nil
+      end  
+    end
+    
+    describe 'authentication' do
+      it 'should not affect authable?, since users need at least one other auth method' do
+        user = User.new(:username => 'username', :email => 'email@email.com')
+        user.should_not be_authable
+        user.remember_me
+        user.should_not be_authable
+      end
+        
+      it 'should find users by their auth remember_me tokens' do 
+        @user.remember_me!
+        @user = User.get(@user.id) # this is necessary because the expires at is a date here and a string saved
+        token = @user.auth['remember_me']['token']
+        user = User.by_remember_me_token(:key => token).first
+        user.should_not be_nil
+        user.should == @user
+      end
+        
+      describe 'authenticate_by_remember_me, instance level' do
+        it 'should return self if token has not expired' do 
+          @user.remember_me!
+          @user.authenticate_by_remember_me.should == @user
+        end
+          
+        it 'should return false is the user has expired' do 
+          @user.remember_me!(Time.now-3.weeks)
+          (@user.auth['remember_me']['expires_at'] < Time.now).should == true  
+          @user.authenticate_by_remember_me.should == false
+        end  
+      end
+      
+      describe 'authenticate_by_remember_me, class level' do 
+        it 'should return the user if found and authenticated' do 
+          @user.remember_me!
+          user = User.authenticate_by_remember_me( @user.auth['remember_me']['token'] ) 
+          user.should_not be_nil
+          user.should == User.get(@user.id)
+        end
+          
+        it 'should return nil if user not found via auth key' do
+          @user.remember_me # not saved 
+          user = User.authenticate_by_remember_me( @user.auth['remember_me']['token'] )
+          user.should be_nil
+        end
+          
+        it 'should return false if user is found but token has expired' do 
+          @user.remember_me!( Time.now - 3.weeks )
+          user = User.authenticate_by_remember_me( @user.auth['remember_me']['token'] )
+          user.should == false
+        end  
+      end   
+    end 
+  end  
 end
