@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   # GET /users
   # GET /users.xml
   # GET /users.json
-  def index
+  def index 
     @users = User.all
 
     respond_to do |format|

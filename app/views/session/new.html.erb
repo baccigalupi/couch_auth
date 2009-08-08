@@ -1,17 +1,17 @@
 <h2>Login</h2>
 
-<% form_for :login, :url => {:action => :create} do |form| %>
+<% form_for :session, :url => {:action => :create} do |form| %>
   <div class="input">
-    <%= form.label 'session[login]', 'Username or Email'%>
-    <%= form.text_field 'session[login]' %>  
+    <%= form.label 'login', 'Username or Email'%>
+    <%= form.text_field 'login' %>  
   </div>
   <div class="input">
-    <%= form.label 'session[password]', 'Password' %>
-    <%= form.password_field 'session[password]' %>
+    <%= form.label 'password', 'Password' %>
+    <%= form.password_field 'password' %>
   </div>
   <div class="input">
-    <%= form.check_box 'session[remember_me]' %>
-    <%= form.label 'session[remember_me]', 'Remember me' %>
+    <%= form.check_box 'remember_me' %>
+    <%= form.label 'remember_me', 'Remember me' %>
   </div>
   <%= form.submit "Login" %>
 <% end %>
