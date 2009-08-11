@@ -1,0 +1,4 @@
+To activate your account, please follow this link:
+    
+<%= "/users/#{@user.id}/verify_email?token=#{@user.auth['temporary_token']['token']}" %>
+

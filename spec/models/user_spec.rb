@@ -176,8 +176,8 @@ describe User do
         end  
         
         it 'should return a user when given a valid email and password' do 
-          User.authenticate_by_email('ru_ghetto@rubyghetto.com', 'secret').should == @user
-          User.authenticate_by_email('baccigalupi@gmail.com', 'secret').should == @user
+          User.authenticate_by_email('ru_ghetto@rubyghetto.com', 'secret').id.should == @user.id
+          User.authenticate_by_email('baccigalupi@gmail.com', 'secret').id.should == @user.id
         end
           
         it 'should return nil when user is not found' do
@@ -195,7 +195,7 @@ describe User do
         end  
         
         it 'should return a user when given a valid username and password' do 
-          User.authenticate_by_username( 'rughetto', 'secret' ).should == @user
+          User.authenticate_by_username( 'rughetto', 'secret' ).id.should == @user.id
         end 
         
         it 'should return nil when user is not found' do 
@@ -213,12 +213,12 @@ describe User do
         end  
         
         it 'should try to authenticate via username' do
-          User.authenticate_by_password( 'rughetto', 'secret' ).should == @user
+          User.authenticate_by_password( 'rughetto', 'secret' ).id.should == @user.id
         end
           
         it 'should try to authenticate via email' do
-          User.authenticate_by_password( 'ru_ghetto@rubyghetto.com', 'secret' ).should == @user 
-          User.authenticate_by_password( 'baccigalupi@gmail.com', 'secret' ).should == @user
+          User.authenticate_by_password( 'ru_ghetto@rubyghetto.com', 'secret' ).id.should == @user.id 
+          User.authenticate_by_password( 'baccigalupi@gmail.com', 'secret' ).id.should == @user.id
         end
           
         it 'should return nil if user is not found' do
@@ -449,4 +449,183 @@ describe User do
       end   
     end 
   end  
+
+  describe 'temporary token usage' do
+    before(:each) do 
+      @user = User.new( @valid_attributes )
+    end
+    
+    describe 'setting token' do
+      it 'should set the auth["temporary_token"] hash' do
+        @user.add_temporary_token
+        @user.auth['temporary_token'].should_not be_nil
+        @user.auth['temporary_token'].class.should == Hash
+      end
+        
+      it 'should set the auth["temporary_token"]["token"]' do
+        @user.add_temporary_token
+        @user.auth['temporary_token']['token'].should_not be_nil
+        @user.auth['temporary_token']['token'].should_not be_empty
+      end
+        
+      it 'should set the auth["temporary_token"]["expires_at"]' do 
+        @user.add_temporary_token
+        @user.auth['temporary_token']['expires_at'].should_not be_nil
+      end
+      
+      it 'should save the document through when the ! version is called' do
+        @user.add_temporary_token!
+        user = User.first
+        user.auth['temporary_token'].should_not be_nil
+        user.auth['temporary_token']['token'].should_not be_nil
+        user.auth['temporary_token']['expires_at'].should_not be_nil
+      end  
+      
+      it 'should cast the expires_at portion to and from a Time' do
+        @user.add_temporary_token!
+        user = User.first
+        user.temporary_token_expires_at.should_not be_nil
+        user.temporary_token_expires_at.class.should == Time
+      end
+    end
+    
+    describe 'clearing token' do
+      it 'should clear the auth["temporary_token"] hash and related' do
+        @user.add_temporary_token
+        @user.auth['temporary_token'].should_not be_nil
+        @user.auth['temporary_token']['token'].should_not be_nil
+        @user.auth['temporary_token']['expires_at'].should_not be_nil 
+        @user.clear_temporary_token
+        @user.auth['temporary_token'].should be_nil
+      end  
+    
+      it 'should save the document when the ! version is called' do
+        @user.save
+        @user.add_temporary_token
+        @user.auth['temporary_token'].should_not be_nil
+        @user.auth['temporary_token']['token'].should_not be_nil
+        @user.auth['temporary_token']['expires_at'].should_not be_nil
+        @user.clear_temporary_token!
+        user = User.first
+        user.auth['temporary_token'].should be_nil
+      end  
+    end
+    
+    describe 'authentication' do
+      it 'should not affect authable?, since users need at least one other auth method' do
+        user = User.new(:username => 'username', :email => 'email@email.com')
+        user.should_not be_authable
+        user.add_temporary_token
+        user.should_not be_authable
+      end
+        
+      it 'should find users by their auth temporary_token tokens' do 
+        @user.add_temporary_token!
+        @user = User.get(@user.id) # this is necessary because the expires at is a date here and a string saved
+        token = @user.auth['temporary_token']['token']
+        user = User.by_temporary_token(:key => token).first
+        user.should_not be_nil
+        user.should == @user
+      end
+        
+      describe 'authenticate_by_temporary_token, instance level' do
+        it 'should return self if token has not expired' do 
+          @user.save
+          @user.add_temporary_token!
+          @user.authenticate_by_temporary_token.should == @user
+        end
+          
+        it 'should return false is the user has expired' do 
+          @user.save
+          @user.add_temporary_token!(Time.now-3.weeks)
+          (@user.auth['temporary_token']['expires_at'] < Time.now).should == true  
+          @user.authenticate_by_temporary_token.should == false
+        end  
+      end
+      
+      describe 'authenticate_by_temporary_token, class level' do 
+        it 'should return the user if found and authenticated' do 
+          @user.save
+          @user.add_temporary_token!
+          user = User.authenticate_by_temporary_token( @user.auth['temporary_token']['token'] ) 
+          user.should_not be_nil
+          user.should == User.get(@user.id)
+        end
+          
+        it 'should return nil if user not found via auth key' do
+          @user.add_temporary_token # not saved 
+          user = User.authenticate_by_temporary_token( @user.auth['temporary_token']['token'] )
+          user.should be_nil
+        end
+          
+        it 'should return false if user is found but token has expired' do 
+          @user.save # verification temp token created for new record ...
+          @user.add_temporary_token!( Time.now - 3.weeks ) # now save with expired token
+          user = User.authenticate_by_temporary_token( @user.auth['temporary_token']['token'] )
+          puts user.inspect
+          user.should == false
+        end  
+      end 
+    end 
+  end
+  
+  describe 'lost password!' do
+    before(:each) do 
+      @user = User.new( @valid_attributes )
+    end
+    
+    it 'should set the temporary_token' do
+      @user.lost_password!
+      user = User.find( @user.id )
+      user.auth['temporary_token'].should_not be_nil
+    end
+    
+    it 'should authenticated by temporary_token afterwards' do 
+      @user.lost_password!
+      @user.authenticate_by_temporary_token.should == @user
+    end  
+      
+    it 'should send a lost password email' do
+      UserMailer.should_receive(:deliver_change_password)
+      @user.lost_password!
+    end
+    
+    it 'should send it to the non-primary email if requested' do
+      UserMailer.should_receive(:deliver_change_password).with( @user, 'baccigalupi@gmail.com')
+      @user.lost_password!('baccigalupi@gmail.com')
+    end 
+    
+    it 'should not send email to an address not related to user' do
+      UserMailer.should_receive(:deliver_change_password).with( @user, 'ru_ghetto@rubyghetto.com')
+      @user.lost_password!('not_real@gmail.com')
+    end     
+  end   
+  
+  describe 'verify email' do
+    before(:each) do 
+      @user = User.new( @valid_attributes )
+    end
+     
+    it 'on user creation should send email' do 
+      UserMailer.should_receive(:deliver_verify_email)
+      @user.save
+    end
+    
+    it 'should be unverified initially' do
+      @user.save
+      @user.should_not be_verified
+    end  
+    
+    it 'should verify' do 
+      @user.verify
+      @user.should be_verified
+    end  
+    
+    it 'should verify!' do
+      @user.verify!
+      user = User.get(@user.id)
+      user.should be_verified
+    end   
+  end  
+
 end

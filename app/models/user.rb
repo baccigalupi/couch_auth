@@ -1,9 +1,13 @@
 require COUCH_EXPRESS + '/couch_express/auth/model/password'
 require COUCH_EXPRESS + '/couch_express/auth/model/remember_me'
+require COUCH_EXPRESS + '/couch_express/auth/model/lost_password'
+require COUCH_EXPRESS + '/couch_express/auth/model/verify_email'
 
 class User < CouchExpress::ValidatedModel
   include CouchExpress::AuthModel::Password
   include CouchExpress::AuthModel::RememberMe
+  include CouchExpress::AuthModel::LostPassword
+  include CouchExpress::AuthModel::VerifyEmail
   
   use_database CouchRest.database!("http://localhost:5984/couch_auth_users_#{RAILS_ENV}")
   

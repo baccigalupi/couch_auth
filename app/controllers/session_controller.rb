@@ -21,7 +21,7 @@ class SessionController < ApplicationController
     redirect_to logged_in_home 
   end
   
-  def delete
+  def destroy
     forget_me! 
     logout
     redirect_to '/'

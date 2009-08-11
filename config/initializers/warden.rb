@@ -17,4 +17,9 @@ end
 require COUCH_EXPRESS + '/couch_express/auth/strategies/remember_me'
 Warden::Strategies.add(:remember_me) do 
   include CouchExpress::Strategy::RememberMe
+end 
+
+require COUCH_EXPRESS + '/couch_express/auth/strategies/temporary_token'
+Warden::Strategies.add(:temporary_token) do 
+  include CouchExpress::Strategy::TemporaryToken
 end       
