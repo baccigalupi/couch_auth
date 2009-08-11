@@ -1,8 +1,8 @@
 /* RAILS STUFF */
-.errorExplanation { border: 1px solid #684727; padding: 15px; margin-top: 10px; margin-bottom: 20px; 
+.errorExplanation, .error { border: 1px solid #684727; padding: 15px; margin-top: 10px; margin-bottom: 20px; 
   background-color: #d9bc9e; color: #684727;
 }
-.errorExplanation * { color: #684727; }
+.errorExplanation *, .error * { color: #684727; }
 
 /* Page Boy styles 
  -------------------

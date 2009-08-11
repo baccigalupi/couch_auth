@@ -3,7 +3,7 @@
 <% form_for :session, :url => {:action => :create} do |form| %>
   <div class="input">
     <%= form.label 'login', 'Username or Email'%>
-    <%= form.text_field 'login' %>  
+    <%= text_field_tag 'session[login]', params[:session] && params[:session][:login], :size => 30 %>  
   </div>
   <div class="input">
     <%= form.label 'password', 'Password' %>

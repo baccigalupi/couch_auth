@@ -7,4 +7,9 @@ class ApplicationController < ActionController::Base
 
   # Scrub sensitive parameters from your log
   filter_parameter_logging :password, :password_confirmation
+  
+  before_filter :auth_with_remember_me
+  def auth_with_remember_me 
+    authenticate(:remember_me)
+  end  
 end

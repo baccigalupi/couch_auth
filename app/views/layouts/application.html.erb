@@ -19,6 +19,13 @@
         <img src="/images/page_boy_cms_logo.png" class="text_logo"/>
       </div>
       <div id="content" class="content clearfix">
+        <% if flash -%>
+          <% flash.each do |level, message|%>
+          <div id="flash" class="<%= level%>">
+            <%= message %>
+          </div>
+          <% end -%>
+        <% end -%>
         <%= yield(:layout) %>
       </div>
       <div id="footer" class="footer">

@@ -7,7 +7,7 @@ RAILS_GEM_VERSION = '2.3.2' unless defined? RAILS_GEM_VERSION
 require File.join(File.dirname(__FILE__), 'boot')
 
 Rails::Initializer.run do |config|
-  config.gem "hassox-warden", :lib => "warden"
+  config.gem "hassox-warden", :lib => 'warden'
   config.gem "hassox-rails_warden", :lib => "rails_warden"
   
   # Only load the plugins named here, in the order given (default is alphabetical).
